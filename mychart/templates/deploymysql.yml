@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mychart.fullname" . }}-mysql
+  labels:
+    app: mysql
+  {{- include "mychart.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.mysql.replicas }}
+  selector:
+    matchLabels:
+      app: mysql
+    {{- include "mychart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: mysql
+      {{- include "mychart.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - env:
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              key: username
+              name: {{ include "mychart.fullname" . }}-mysql-creds
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: {{ include "mychart.fullname" . }}-mysql-creds
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: rootpassword
+              name: {{ include "mychart.fullname" . }}-mysql-creds
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              key: database
+              name: {{ include "mychart.fullname" . }}-mysql-creds
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: {{ .Values.mysql.mysql.image.repository }}:{{ .Values.mysql.mysql.image.tag
+          | default .Chart.AppVersion }}
+        name: mysql
+        ports:
+        - containerPort: 3306
+        readinessProbe:
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          tcpSocket:
+            port: 3306
+          timeoutSeconds: 5
+        resources: {}
+      nodeSelector: {{- toYaml .Values.mysql.nodeSelector | nindent 8 }}
+      serviceAccountName: {{ include "mychart.serviceAccountName" . }}
+      tolerations: {{- toYaml .Values.mysql.tolerations | nindent 8 }}
+      topologySpreadConstraints: {{- toYaml .Values.mysql.topologySpreadConstraints | nindent
+        8 }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "mychart.fullname" . }}-mysql-creds
+  labels:
+  {{- include "mychart.labels" . | nindent 4 }}
+stringData:
+  database: {{ required "mysqlCreds.database is required" .Values.mysqlCreds.database
+    | quote }}
+  password: {{ required "mysqlCreds.password is required" .Values.mysqlCreds.password
+    | quote }}
+  rootpassword: {{ required "mysqlCreds.rootpassword is required" .Values.mysqlCreds.rootpassword
+    | quote }}
+  username: {{ required "mysqlCreds.username is required" .Values.mysqlCreds.username
+    | quote }}
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mychart.fullname" . }}-mysql-svc
+  labels:
+    app: mysql
+  {{- include "mychart.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.mysqlSvc.type }}
+  selector:
+    app: mysql
+    {{- include "mychart.selectorLabels" . | nindent 4 }}
+  ports:
+  {{- .Values.mysqlSvc.ports | toYaml | nindent 2 }}

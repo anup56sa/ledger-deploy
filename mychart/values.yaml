@@ -1,0 +1,49 @@
+backendSvc:
+  ports:
+  - nodePort: 32000
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  type: NodePort
+kubernetesClusterDomain: cluster.local
+mysql:
+  mysql:
+    image:
+      repository: mysql
+      tag: "8.1"
+  nodeSelector: {}
+  replicas: 1
+  tolerations: []
+  topologySpreadConstraints: []
+mysqlCreds:
+  database: ""
+  password: ""
+  rootpassword: ""
+  username: ""
+mysqlSvc:
+  ports:
+  - port: 3306
+    protocol: TCP
+    targetPort: 3306
+  type: NodePort
+wezvabackendapp:
+  initMydb:
+    image:
+      repository: busybox
+      tag: "1.28"
+  nodeSelector: {}
+  replicas: 2
+  tolerations: []
+  topologySpreadConstraints: []
+  wezvabackendapp:
+    image:
+      repository: 001647536300.dkr.ecr.ap-south-1.amazonaws.com/wezvatechbackend
+      tag: fb1
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 400m
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 128Mi

@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mychart.fullname" . }}-wezvabackendapp
+  labels:
+  {{- include "mychart.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.wezvabackendapp.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: wezvabackendapp
+    {{- include "mychart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: wezvabackendapp
+      {{- include "mychart.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - env:
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              key: username
+              name: {{ include "mychart.fullname" . }}-mysql-creds
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: {{ include "mychart.fullname" . }}-mysql-creds
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: {{ .Values.wezvabackendapp.wezvabackendapp.image.repository }}:{{ .Values.wezvabackendapp.wezvabackendapp.image.tag
+          | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.wezvabackendapp.wezvabackendapp.imagePullPolicy }}
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 45
+          timeoutSeconds: 5
+        name: wezvabackendapp
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 5
+        resources: {{- toYaml .Values.wezvabackendapp.wezvabackendapp.resources | nindent
+          10 }}
+        volumeMounts:
+        - mountPath: /opt/wezva/application.properties
+          name: testconfigmap
+          subPath: application.properties
+      imagePullSecrets:
+      - name: awsecr-cred
+      initContainers:
+      - command:
+        - sh
+        - -c
+        - until nslookup mysql-svc.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local;
+          do echo waiting for mydb; sleep 2; done
+        env:
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: {{ .Values.wezvabackendapp.initMydb.image.repository }}:{{ .Values.wezvabackendapp.initMydb.image.tag
+          | default .Chart.AppVersion }}
+        name: init-mydb
+        resources: {}
+      nodeSelector: {{- toYaml .Values.wezvabackendapp.nodeSelector | nindent 8 }}
+      serviceAccountName: {{ include "mychart.serviceAccountName" . }}
+      tolerations: {{- toYaml .Values.wezvabackendapp.tolerations | nindent 8 }}
+      topologySpreadConstraints: {{- toYaml .Values.wezvabackendapp.topologySpreadConstraints
+        | nindent 8 }}
+      volumes:
+      - configMap:
+          items:
+          - key: application.properties
+            path: application.properties
+          name: {{ include "mychart.fullname" . }}-wezvabackendapp
+        name: testconfigmap
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mychart.fullname" . }}-backend-svc
+  labels:
+  {{- include "mychart.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.backendSvc.type }}
+  selector:
+    app.kubernetes.io/name: wezvabackendapp
+    {{- include "mychart.selectorLabels" . | nindent 4 }}
+  ports:
+  {{- .Values.backendSvc.ports | toYaml | nindent 2 }}
