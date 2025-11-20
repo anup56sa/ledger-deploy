@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: wezvatech-capstoneproject
+  namespace: argocd # Must be in the same namespace as Argo CD
+spec:
+  generators:
+  - git:
+      repoURL: https://gitlab.com/wezvaprojects/ninjas/jobready1.0/deployment/springboot.git
+      revision: HEAD
+      directories:
+      - path: envs/*
+  template:
+    metadata:
+      name: '{{path.basename}}' 
+      annotations:
+        argocd-image-updater.argoproj.io/image-list: myimage=001647536300.dkr.ecr.ap-south-1.amazonaws.com/wezvatechbackend
+        argocd-image-updater.argoproj.io/myimage.update-strategy: latest
+        argocd-image-updater.argoproj.io/myimage.allow-tags: >
+          {{- if eq (path.basename) "functional" -}}regexp:^fb[0-9]+$
+          {{- else if eq (path.basename) "integration" -}}regexp:^int[0-9]+$
+          {{- else if eq (path.basename) "uat" -}}regexp:^int[0-9]+$
+          {{- else -}}regexp:^latest$
+          {{- end }}
+        argocd-image-updater.argoproj.io/write-back-method: argocd
+        argocd-image-updater.argoproj.io/myimage.force-update: "true"
+    spec:
+      project: default
+      source:
+        repoURL: https://gitlab.com/wezvaprojects/ninjas/jobready1.0/deployment/springboot.git
+        targetRevision: main
+        path: mychart
+        helm:
+          valueFiles:
+           - '../envs/{{path.basename}}/values.yaml'
+      destination:
+        server: https://kubernetes.default.svc # Your target cluster API server URL
+        namespace: '{{path.basename}}' # Target namespace for deployment
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true 
+

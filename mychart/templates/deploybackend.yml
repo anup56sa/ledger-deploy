@@ -62,7 +62,7 @@ spec:
       - command:
         - sh
         - -c
-        - until nslookup mysql-svc.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local;
+        - until nslookup {{ include "mychart.fullname" . }}-mysql-svc.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local;
           do echo waiting for mydb; sleep 2; done
         env:
         - name: KUBERNETES_CLUSTER_DOMAIN
