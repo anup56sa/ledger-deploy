@@ -1,0 +1,26 @@
+pipeline {
+ agent none
+ parameters {
+   string(name: 'ECRURL', defaultValue: '081654307023.dkr.ecr.ap-south-1.amazonaws.com', description: 'Please Enter ECR REGISTRY URL with / at the end')
+   string(name: 'REPO', defaultValue: 'wezvatechbackend', description: 'Please Enter the Repo to use?')
+   string(name: 'IMAGE', defaultValue: 'rel1', description: 'Please Enter the Image Tag to Deploy?')
+   password(name: 'PASSWD', defaultValue: '', description: 'Please Enter your Gitlab password')
+   choice(name:'TEST', choices: ['functional', 'integration', 'regression', 'uat', 'release' ] ,description: 'select where need to deploy')
+ }
+ stages {
+  stage('Deploy')
+  {
+    agent { label 'demo' }
+    steps { 
+        git branch: 'main', credentialsId: 'GitlabCred', url: 'https://gitlab.com/wezvaprojects/ninjas/jobready1.0/deployment/springboot.git'
+	    dir ("./envs/${params.TEST}") {
+              sh "sed -i 's/repository:.[0-9][0-9].*/image: $ECRURL$REPO/g' values.yaml" // make sure the ECRURL has \/ at the end
+              sh "sed -i 's/tag:.*/tag: $IMAGE/g' values.yaml"
+	    }
+
+		sh 'git commit -a -m "New deployment for Build $IMAGE"'
+		sh "git push https://scmlearningcentre:$PASSWD@gitlab.com/wezvaprojects/ninjas/jobready1.0/deployment/springboot.git"
+    }
+  }
+ }
+}
