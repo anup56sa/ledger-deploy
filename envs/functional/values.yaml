@@ -1,8 +1,8 @@
 wezvabackendapp:
   wezvabackendapp:
     image:
-      repository: 001647536300.dkr.ecr.ap-south-1.amazonaws.com/wezvatechbackend
-      tag: fb9
+      image: 081654307023.dkr.ecr.ap-south-1.amazonaws.comwezvatechbackend
+      tag: /wezvatechbackend:fb13
 backendSvc:
   ports:
   - nodePort: 30000
