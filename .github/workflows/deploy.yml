@@ -10,7 +10,7 @@ on:
       REPO:
         description: "Repository Name"
         required: true
-        default: "wezvatechbackend"
+        default: "wezvatechledger"
       IMAGE:
         description: "Image Tag"
         required: true
