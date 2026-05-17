@@ -1,9 +1,9 @@
-wezvabackendapp:
-  wezvabackendapp:
+wezvaledgerapp:
+  wezvaledgerapp:
     image:
-      image: 081654307023.dkr.ecr.ap-south-1.amazonaws.comwezvatechbackend
+      image: 081654307023.dkr.ecr.ap-south-1.amazonaws.com/wezvatechledger
       tag: rel4
-backendSvc:
+ledgerSvc:
   ports:
   - nodePort: 30000
     port: 8080
