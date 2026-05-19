@@ -14,17 +14,17 @@ on:
       IMAGE:
         description: "Image Tag"
         required: true
-        default: "fb28"
+        default: "rel28"
       TEST:
         description: "Environment"
         required: true
         type: choice
         options:
+          - release
           - functional
           - integration
           - regression
           - uat
-          - release
 
 jobs:
   deploy:
