@@ -20,11 +20,11 @@ on:
         required: true
         type: choice
         options:
-          - release
           - functional
           - integration
           - regression
           - uat
+          - release
 
 jobs:
   deploy:
