@@ -83,17 +83,4 @@ spec:
             path: application.properties
           name: {{ include "mychart.fullname" . }}-wezvaledgerapp
         name: testconfigmap
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ include "mychart.fullname" . }}-ledger-svc
-  labels:
-  {{- include "mychart.labels" . | nindent 4 }}
-spec:
-  type: {{ .Values.ledgerSvc.type }}
-  selector:
-    app.kubernetes.io/name: wezvaledgerapp
-    {{- include "mychart.selectorLabels" . | nindent 4 }}
-  ports:
-  {{- .Values.ledgerSvc.ports | toYaml | nindent 2 }}
+
