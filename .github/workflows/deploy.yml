@@ -1,11 +1,13 @@
 name: CD Pipeline
 
 on:
-  workflow_dispatch:
   push:
     paths:
       - 'envs/**'
-
+    branches:
+      - main
+      
+  workflow_dispatch:
     inputs:
       ECRURL:
         description: "ECR Registry URL (with / at end)"
