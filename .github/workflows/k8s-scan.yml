@@ -1,0 +1,33 @@
+name: k8s Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'mychart/**'
+
+  workflow_dispatch:
+    
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        
+      # ------------
+      # Install Helm
+      # ------------
+      - name: install Helm
+        run: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      # -------------------------
+      # Convert and scan k8s yaml
+      # -------------------------
+      - name: kubesec
+        continue-on-error: true
+        run: |
+          helm template ./mychart -f envs/functional/values.yaml > renderedmanifest.yaml
+          docker run --rm -v "$(pwd):/app" kubesec/kubesec scan /app/renderedmanifest.yaml      
