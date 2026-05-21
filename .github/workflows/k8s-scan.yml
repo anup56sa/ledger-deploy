@@ -1,4 +1,4 @@
-name: k8s Pipeline
+name: DevSecOps Pipeline
 
 on:
   push:
