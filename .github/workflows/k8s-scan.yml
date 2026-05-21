@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     
 jobs:
-  deploy:
+  devsecops:
     runs-on: ubuntu-latest
 
     steps:
