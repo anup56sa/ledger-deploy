@@ -12,7 +12,7 @@ spec:
       - path: envs/*
   template:
     metadata:
-      name: '{{path.basename}}' 
+      name: '{{path.basename}}-ledger'
     spec:
       project: default
       source:
