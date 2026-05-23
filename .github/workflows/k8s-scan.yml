@@ -1,4 +1,4 @@
-name: k8s Pipeline
+name: DevSecOps Pipeline
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     
 jobs:
-  deploy:
+  devsecops:
     runs-on: ubuntu-latest
 
     steps:
