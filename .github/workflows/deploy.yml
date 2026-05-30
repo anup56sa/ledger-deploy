@@ -36,6 +36,13 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    # Define environment variables with fallback values for the push trigger
+    env:
+      ENV_NAME: ${{ inputs.TEST || 'functional' }}
+      ECR_URL: ${{ inputs.ECRURL || '081654307023.dkr.ecr.ap-south-1.amazonaws.com/' }}
+      REPO_NAME: ${{ inputs.REPO || 'wezvatechledger' }}
+      IMAGE_TAG: ${{ inputs.IMAGE || 'rel28' }}
+
     steps:
       # -----------------------------
       # Checkout Deployment Repo
@@ -52,13 +59,13 @@ jobs:
       # -----------------------------
       - name: Update Helm values
         run: |
-          cd envs/${{ inputs.TEST }}
+          cd envs/${{ env.ENV_NAME }}
 
           echo "Updating image repository..."
-          sed -i "s|repository:.*|repository: ${{ inputs.ECRURL }}${{ inputs.REPO }}|g" values.yaml
+          sed -i "s|repository:.*|repository: ${{ env.ECR_URL }}${{ env.REPO_NAME }}|g" values.yaml
 
           echo "Updating image tag..."
-          sed -i "s|tag:.*|tag: ${{ inputs.IMAGE }}|g" values.yaml
+          sed -i "s|tag:.*|tag: ${{ env.IMAGE_TAG }}|g" values.yaml
 
           echo "Updated values.yaml:"
           cat values.yaml
@@ -72,6 +79,6 @@ jobs:
           git config user.email "actions@github.com"
 
           git add .
-          git commit -m "New deployment for Build ${{ inputs.IMAGE }}" || echo "No changes to commit"
+          git commit -m "New deployment for Build ${{ env.IMAGE_TAG }}" || echo "No changes to commit"
 
           git push origin main
