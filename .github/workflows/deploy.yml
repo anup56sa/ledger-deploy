@@ -2,8 +2,6 @@ name: CD Pipeline
 
 on:
   push:
-    paths:
-      - 'envs/**'
     branches:
       - main
       
