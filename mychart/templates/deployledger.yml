@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "mychart.fullname" . }}-wezvabackendapp
+  name: {{ include "mychart.fullname" . }}-wezvaledgerapp
   labels:
   {{- include "mychart.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.wezvabackendapp.replicas }}
+  replicas: {{ .Values.wezvaledgerapp.replicas }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: wezvabackendapp
+      app.kubernetes.io/name: wezvaledgerapp
     {{- include "mychart.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: wezvabackendapp
+        app.kubernetes.io/name: wezvaledgerapp
       {{- include "mychart.selectorLabels" . | nindent 8 }}
     spec:
       containers:
@@ -30,9 +30,9 @@ spec:
               name: {{ include "mychart.fullname" . }}-mysql-creds
         - name: KUBERNETES_CLUSTER_DOMAIN
           value: {{ quote .Values.kubernetesClusterDomain }}
-        image: {{ .Values.wezvabackendapp.wezvabackendapp.image.repository }}:{{ .Values.wezvabackendapp.wezvabackendapp.image.tag
+        image: {{ .Values.wezvaledgerapp.wezvaledgerapp.image.repository }}:{{ .Values.wezvaledgerapp.wezvaledgerapp.image.tag
           | default .Chart.AppVersion }}
-        imagePullPolicy: {{ .Values.wezvabackendapp.wezvabackendapp.imagePullPolicy }}
+        imagePullPolicy: {{ .Values.wezvaledgerapp.wezvaledgerapp.imagePullPolicy }}
         livenessProbe:
           httpGet:
             path: /actuator/health/liveness
@@ -40,7 +40,7 @@ spec:
           initialDelaySeconds: 30
           periodSeconds: 45
           timeoutSeconds: 5
-        name: wezvabackendapp
+        name: wezvaledgerapp
         ports:
         - containerPort: 8080
         readinessProbe:
@@ -50,7 +50,7 @@ spec:
           initialDelaySeconds: 30
           periodSeconds: 5
           timeoutSeconds: 5
-        resources: {{- toYaml .Values.wezvabackendapp.wezvabackendapp.resources | nindent
+        resources: {{- toYaml .Values.wezvaledgerapp.wezvaledgerapp.resources | nindent
           10 }}
         volumeMounts:
         - mountPath: /opt/wezva/application.properties
@@ -67,33 +67,20 @@ spec:
         env:
         - name: KUBERNETES_CLUSTER_DOMAIN
           value: {{ quote .Values.kubernetesClusterDomain }}
-        image: {{ .Values.wezvabackendapp.initMydb.image.repository }}:{{ .Values.wezvabackendapp.initMydb.image.tag
+        image: {{ .Values.wezvaledgerapp.initMydb.image.repository }}:{{ .Values.wezvaledgerapp.initMydb.image.tag
           | default .Chart.AppVersion }}
         name: init-mydb
         resources: {}
-      nodeSelector: {{- toYaml .Values.wezvabackendapp.nodeSelector | nindent 8 }}
+      nodeSelector: {{- toYaml .Values.wezvaledgerapp.nodeSelector | nindent 8 }}
       serviceAccountName: {{ include "mychart.serviceAccountName" . }}
-      tolerations: {{- toYaml .Values.wezvabackendapp.tolerations | nindent 8 }}
-      topologySpreadConstraints: {{- toYaml .Values.wezvabackendapp.topologySpreadConstraints
+      tolerations: {{- toYaml .Values.wezvaledgerapp.tolerations | nindent 8 }}
+      topologySpreadConstraints: {{- toYaml .Values.wezvaledgerapp.topologySpreadConstraints
         | nindent 8 }}
       volumes:
       - configMap:
           items:
           - key: application.properties
             path: application.properties
-          name: {{ include "mychart.fullname" . }}-wezvabackendapp
+          name: {{ include "mychart.fullname" . }}-wezvaledgerapp
         name: testconfigmap
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ include "mychart.fullname" . }}-backend-svc
-  labels:
-  {{- include "mychart.labels" . | nindent 4 }}
-spec:
-  type: {{ .Values.backendSvc.type }}
-  selector:
-    app.kubernetes.io/name: wezvabackendapp
-    {{- include "mychart.selectorLabels" . | nindent 4 }}
-  ports:
-  {{- .Values.backendSvc.ports | toYaml | nindent 2 }}
+

@@ -1,9 +1,9 @@
-wezvabackendapp:
-  wezvabackendapp:
+wezvaledgerapp:
+  wezvaledgerapp:
     image:
-      repository: 001647536300.dkr.ecr.ap-south-1.amazonaws.com/wezvatechbackend
-      tag: fb9
-backendSvc:
+      image: 081654307023.dkr.ecr.ap-south-1.amazonaws.com/wezvatechledger
+      tag: fb37
+ledgerSvc:
   ports:
   - nodePort: 30000
     port: 8080

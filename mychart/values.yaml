@@ -1,4 +1,4 @@
-backendSvc:
+ledgerSvc:
   ports:
   - nodePort: 32000
     port: 8080
@@ -26,7 +26,7 @@ mysqlSvc:
     protocol: TCP
     targetPort: 3306
   type: NodePort
-wezvabackendapp:
+wezvaledgerapp:
   initMydb:
     image:
       repository: busybox
@@ -35,9 +35,9 @@ wezvabackendapp:
   replicas: 2
   tolerations: []
   topologySpreadConstraints: []
-  wezvabackendapp:
+  wezvaledgerapp:
     image:
-      repository: 001647536300.dkr.ecr.ap-south-1.amazonaws.com/wezvatechbackend
+      repository: 081654307023.dkr.ecr.ap-south-1.amazonaws.com/wezvatechledger
       tag: fb1
     imagePullPolicy: IfNotPresent
     resources:

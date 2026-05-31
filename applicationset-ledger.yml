@@ -6,17 +6,17 @@ metadata:
 spec:
   generators:
   - git:
-      repoURL: https://gitlab.com/wezvaprojects/ninjas/jobready1.0/deployment/springboot.git
+      repoURL: https://github.com/wezva-fintech/ledger-deployment.git
       revision: HEAD
       directories:
       - path: envs/*
   template:
     metadata:
-      name: '{{path.basename}}' 
+      name: '{{path.basename}}-ledger'
     spec:
       project: default
       source:
-        repoURL: https://gitlab.com/wezvaprojects/ninjas/jobready1.0/deployment/springboot.git
+        repoURL: https://github.com/wezva-fintech/ledger-deployment.git
         targetRevision: main
         path: mychart
         helm:
