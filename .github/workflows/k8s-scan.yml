@@ -3,7 +3,7 @@ name: DevSecOps Pipeline
 on:
   push:
     branches:
-      - main
+      - dev
     paths:
       - 'mychart/**'
 
