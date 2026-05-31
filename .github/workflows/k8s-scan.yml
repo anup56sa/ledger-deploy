@@ -11,6 +11,7 @@ on:
     
 jobs:
   devsecops:
+    if: github.ref_name == 'dev'
     runs-on: ubuntu-latest
 
     steps:
