@@ -38,7 +38,7 @@ jobs:
       - name: Checkout Deployment Repo
         uses: actions/checkout@v4
         with:
-          repository: wezva-fintech/ledger-deployment
+          repository: anup56sa/ledger-deploy
           ref: main
           token: ${{ secrets.GH_PAT }}
 
