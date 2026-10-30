@@ -16,7 +16,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: https://github.com/wezva-fintech/ledger-deployment.git
+        repoURL: https://github.com/anup56sa/ledger-deploy.git
         targetRevision: main
         path: mychart
         helm:
