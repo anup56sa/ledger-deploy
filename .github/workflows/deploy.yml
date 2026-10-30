@@ -26,6 +26,9 @@ on:
           - uat
           - release
 
+permissions:
+  contents: write
+
 jobs:
   deploy:
     if: github.ref_name == 'main'
@@ -40,7 +43,6 @@ jobs:
         with:
           repository: anup56sa/ledger-deploy
           ref: main
-          token: ${{ secrets.GH_PAT }}
 
       # -----------------------------
       # Update values.yaml
