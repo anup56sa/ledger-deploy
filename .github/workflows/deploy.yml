@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       ECRURL:
-        description: "ECR Registry URL (with / at end)"
+        description: "ECR registry host (no trailing slash)"
         required: true
-        default: "081654307023.dkr.ecr.ap-south-1.amazonaws.com/"
+        default: "533003975599.dkr.ecr.ap-south-1.amazonaws.com"
       REPO:
         description: "Repository Name"
         required: true
-        default: "wezvatechledger"
+        default: "fintech-ledger"
       IMAGE:
         description: "Image Tag"
         required: true
@@ -50,7 +50,7 @@ jobs:
           cd envs/${{ inputs.TEST }}
 
           echo "Updating image repository..."
-          sed -i "s|repository:.*|repository: ${{ inputs.ECRURL }}${{ env.REPO_NAME }}|g" values.yaml
+          sed -i "s|repository:.*|repository: ${{ inputs.ECRURL }}/${{ inputs.REPO }}|g" values.yaml
 
           echo "Updating image tag..."
           sed -i "s|tag:.*|tag: ${{ inputs.IMAGE }}|g" values.yaml
