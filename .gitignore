@@ -1,0 +1,9 @@
+# Vault TLS private keys and certificates
+/vault/tls/*.key
+/vault/tls/*.csr
+/vault/tls/*.srl
+/vault/tls/*.crt
+/vault/tls/*.ext
+
+# Vault local files
+/vault/*.local.yaml
