@@ -9,8 +9,13 @@ ledgerSvc:
     port: 8080
     protocol: TCP
     targetPort: 8080
-mysqlCreds:
-  database: "mywezvadb"
-  password: "password"
-  rootpassword: "password"
-  username: "wezvatech"
+serviceAccount:
+  create: true
+  name: ledger-vault
+vaultIntegration:
+  enabled: true
+  address: https://vault-active.vault.svc:8200
+  role: ledger-regression
+  tlsServerName: vault-internal.vault.svc
+  caSecretName: vault-ca
+  caCertKey: ca.crt

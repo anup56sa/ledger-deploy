@@ -15,11 +15,6 @@ mysql:
   replicas: 1
   tolerations: []
   topologySpreadConstraints: []
-mysqlCreds:
-  database: ""
-  password: ""
-  rootpassword: ""
-  username: ""
 mysqlSvc:
   ports:
   - port: 3306
@@ -47,3 +42,13 @@ wezvaledgerapp:
       requests:
         cpu: 100m
         memory: 128Mi
+serviceAccount:
+  create: false
+  name: ""
+vaultIntegration:
+  enabled: false
+  address: ""
+  role: ""
+  tlsServerName: ""
+  caSecretName: ""
+  caCertKey: ca.crt

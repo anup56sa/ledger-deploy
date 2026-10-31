@@ -3,84 +3,117 @@ kind: Deployment
 metadata:
   name: {{ include "mychart.fullname" . }}-wezvaledgerapp
   labels:
-  {{- include "mychart.labels" . | nindent 4 }}
+    {{- include "mychart.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.wezvaledgerapp.replicas }}
   selector:
     matchLabels:
       app.kubernetes.io/name: wezvaledgerapp
-    {{- include "mychart.selectorLabels" . | nindent 6 }}
+      {{- include "mychart.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
         app.kubernetes.io/name: wezvaledgerapp
-      {{- include "mychart.selectorLabels" . | nindent 8 }}
+        {{- include "mychart.selectorLabels" . | nindent 8 }}
+      {{- if .Values.vaultIntegration.enabled }}
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/agent-init-first: "true"
+        vault.hashicorp.com/role: {{ required "vaultIntegration.role is required when Vault integration is enabled" .Values.vaultIntegration.role | quote }}
+        vault.hashicorp.com/service: {{ required "vaultIntegration.address is required when Vault integration is enabled" .Values.vaultIntegration.address | quote }}
+        vault.hashicorp.com/tls-secret: {{ required "vaultIntegration.caSecretName is required when Vault integration is enabled" .Values.vaultIntegration.caSecretName | quote }}
+        vault.hashicorp.com/ca-cert: {{ printf "/vault/tls/%s" .Values.vaultIntegration.caCertKey | quote }}
+        vault.hashicorp.com/tls-server-name: {{ required "vaultIntegration.tlsServerName is required when Vault integration is enabled" .Values.vaultIntegration.tlsServerName | quote }}
+        vault.hashicorp.com/agent-inject-secret-ledger-config: "secret/data/ledger/database"
+        vault.hashicorp.com/agent-inject-file-ledger-config: "application.yaml"
+        vault.hashicorp.com/error-on-missing-key-ledger-config: "true"
+        vault.hashicorp.com/agent-inject-template-ledger-config: |
+          {{`{{- with secret "secret/data/ledger/database" -}}`}}
+          spring:
+            datasource:
+              url: "jdbc:mysql://{{`{{ .Data.data.host }}`}}:{{`{{ .Data.data.port }}`}}/{{`{{ .Data.data.database }}`}}"
+              username: {{`{{ .Data.data.username | toJSON }}`}}
+              password: {{`{{ .Data.data.password | toJSON }}`}}
+            jpa:
+              hibernate:
+                ddl-auto: update
+          {{`{{- end }}`}}
+      {{- end }}
     spec:
       containers:
-      - env:
-        - name: MYSQL_USER
-          valueFrom:
-            secretKeyRef:
-              key: username
-              name: {{ include "mychart.fullname" . }}-mysql-creds
-        - name: MYSQL_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              key: password
-              name: {{ include "mychart.fullname" . }}-mysql-creds
-        - name: KUBERNETES_CLUSTER_DOMAIN
-          value: {{ quote .Values.kubernetesClusterDomain }}
-        image: {{ .Values.wezvaledgerapp.wezvaledgerapp.image.repository }}:{{ .Values.wezvaledgerapp.wezvaledgerapp.image.tag
-          | default .Chart.AppVersion }}
-        imagePullPolicy: {{ .Values.wezvaledgerapp.wezvaledgerapp.imagePullPolicy }}
-        livenessProbe:
-          httpGet:
-            path: /actuator/health/liveness
-            port: 8080
-          initialDelaySeconds: 30
-          periodSeconds: 45
-          timeoutSeconds: 5
-        name: wezvaledgerapp
-        ports:
-        - containerPort: 8080
-        readinessProbe:
-          httpGet:
-            path: /actuator/health/readiness
-            port: 8080
-          initialDelaySeconds: 30
-          periodSeconds: 5
-          timeoutSeconds: 5
-        resources: {{- toYaml .Values.wezvaledgerapp.wezvaledgerapp.resources | nindent
-          10 }}
-        volumeMounts:
-        - mountPath: /opt/wezva/application.properties
-          name: testconfigmap
-          subPath: application.properties
+        - name: wezvaledgerapp
+          {{- if .Values.vaultIntegration.enabled }}
+          command: ["java"]
+          args: ["-jar", "/opt/wezva/app.jar"]
+          {{- end }}
+          env:
+            {{- if .Values.vaultIntegration.enabled }}
+            - name: SPRING_CONFIG_ADDITIONAL_LOCATION
+              value: "file:/vault/secrets/"
+            {{- else }}
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: {{ include "mychart.fullname" . }}-mysql-creds
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: {{ include "mychart.fullname" . }}-mysql-creds
+            {{- end }}
+            - name: KUBERNETES_CLUSTER_DOMAIN
+              value: {{ quote .Values.kubernetesClusterDomain }}
+          image: {{ .Values.wezvaledgerapp.wezvaledgerapp.image.repository }}:{{ .Values.wezvaledgerapp.wezvaledgerapp.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.wezvaledgerapp.wezvaledgerapp.imagePullPolicy }}
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 45
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 5
+          ports:
+            - containerPort: 8080
+          resources: {{- toYaml .Values.wezvaledgerapp.wezvaledgerapp.resources | nindent 12 }}
+          {{- if not .Values.vaultIntegration.enabled }}
+          volumeMounts:
+            - mountPath: /opt/wezva/application.properties
+              name: testconfigmap
+              subPath: application.properties
+          {{- end }}
       imagePullSecrets:
-      - name: awsecr-cred
+        - name: awsecr-cred
+      {{- if not .Values.vaultIntegration.enabled }}
       initContainers:
-      - command:
-        - sh
-        - -c
-        - until nslookup {{ include "mychart.fullname" . }}-mysql-svc.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local;
-          do echo waiting for mydb; sleep 2; done
-        env:
-        - name: KUBERNETES_CLUSTER_DOMAIN
-          value: {{ quote .Values.kubernetesClusterDomain }}
-        image: {{ .Values.wezvaledgerapp.initMydb.image.repository }}:{{ .Values.wezvaledgerapp.initMydb.image.tag
-          | default .Chart.AppVersion }}
-        name: init-mydb
-        resources: {}
+        - command:
+            - sh
+            - -c
+            - until nslookup {{ include "mychart.fullname" . }}-mysql-svc.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for mydb; sleep 2; done
+          env:
+            - name: KUBERNETES_CLUSTER_DOMAIN
+              value: {{ quote .Values.kubernetesClusterDomain }}
+          image: {{ .Values.wezvaledgerapp.initMydb.image.repository }}:{{ .Values.wezvaledgerapp.initMydb.image.tag | default .Chart.AppVersion }}
+          name: init-mydb
+          resources: {}
+      {{- end }}
       nodeSelector: {{- toYaml .Values.wezvaledgerapp.nodeSelector | nindent 8 }}
       serviceAccountName: {{ include "mychart.serviceAccountName" . }}
       tolerations: {{- toYaml .Values.wezvaledgerapp.tolerations | nindent 8 }}
-      topologySpreadConstraints: {{- toYaml .Values.wezvaledgerapp.topologySpreadConstraints
-        | nindent 8 }}
+      topologySpreadConstraints: {{- toYaml .Values.wezvaledgerapp.topologySpreadConstraints | nindent 8 }}
+      {{- if not .Values.vaultIntegration.enabled }}
       volumes:
-      - configMap:
-          items:
-          - key: application.properties
-            path: application.properties
-          name: {{ include "mychart.fullname" . }}-wezvaledgerapp
-        name: testconfigmap
-
+        - configMap:
+            items:
+              - key: application.properties
+                path: application.properties
+            name: {{ include "mychart.fullname" . }}-wezvaledgerapp
+          name: testconfigmap
+      {{- end }}

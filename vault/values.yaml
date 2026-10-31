@@ -4,10 +4,12 @@ global:
 
 vault:
   injector:
-    enabled: false
+    enabled: true
 
   server:
     enabled: true
+    authDelegator:
+      enabled: true
 
     dataStorage:
       enabled: true

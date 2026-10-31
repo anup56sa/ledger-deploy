@@ -9,8 +9,3 @@ ledgerSvc:
     port: 8080
     protocol: TCP
     targetPort: 8080
-mysqlCreds:
-  database: "mywezvadb"
-  password: "password"
-  rootpassword: "password"
-  username: "wezvatech"
